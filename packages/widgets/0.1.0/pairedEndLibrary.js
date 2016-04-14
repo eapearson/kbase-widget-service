@@ -44,25 +44,25 @@ define([
             ]);
         }
         
-        function validateInput(input) {
+        function validateInput(objects, options) {
             return Promise.try(function () {
-                if (!input) {
+                if (!objects) {
                     throw new Error('No params supplied');
                 }
-                if (!input.objectRef) {
-                    throw new Error('The objectRef param is missing');
+                if (!objects.objectRef) {
+                    throw new Error('The objectRef input is missing');
                 }
-                return input;
+                return objects;
             });
         }
         
-        function start(data) {
+        function start(objectRefs, options) {
             // A "request" is a message emitted to the runtime which automatically
             // subscribes to a response, and returns it as a promise. When the
             // reponse is received, the promise is fulfilled and returned.
             // This presents a consistent promise api for message requests.
             // Requests to the runtime can be combined into a single request.
-            return validateInput(data.input)
+            return validateInput(objectRefs, options)
                 .then(function (input) {
                     return config.runtime.requests([
                         ['config', {property: 'services.workspace.url'}],
@@ -73,7 +73,7 @@ define([
                             token: authToken.value
                         });
                         return workspace.get_objects([
-                            {ref: input.objectRef}
+                            {ref: objectRefs.objectRef}
                         ]);
                     })
                     .then(function (data) {
@@ -131,9 +131,10 @@ define([
         config.runtime.on('start', function (initialState) {
             // Initially show a loading indicator
             utils.showLoading(container, 'Loading initial state...');
+            console.log('START', initialState);
             
             // Launch the main widget code.
-            start(initialState)
+            start(initialState.objectRefs, initialState.options)
                 .catch(function (err) {
                     var message;
                     if (err.message) {

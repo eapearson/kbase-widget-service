@@ -18,29 +18,28 @@ define([
             viewComponent = viewWidgetFactory.make(config),
             error;
         
-        function validateParams(params) {
+        function validateInput(objectRefs, options) {
             return Promise.try(function () {
-                if (!params) {
-                    throw new Error('No params supplied');
+                if (!objectRefs) {
+                    throw new Error('No input supplied');
                 }
-                if (!params.objectRef) {
-                    throw new Error('The objectRef param is missing');
+                if (!objectRefs.objectRef) {
+                    console.error(objectRefs, options);
+                    throw new Error('The objectRef input object is missing');
                 }
-                return params;
+                return [objectRefs, options];
             });
         }
         
-        function start(data) {
+        function start(objectRefs, options) {
             // The input is either the dynamic input from data.input,
             // or the constructor input, from config.input
-            console.log('INPUT', config, data);
-            var input = config.input || data.input;
-            return validateParams(input)
+            return validateInput(objectRefs, options)
                 .then(function () {
                     // Set up our components.
                     viewComponent.setup(container);
-                    viewComponent.start(input);
-                    dataComponent.start(input);
+                    viewComponent.start(objectRefs);
+                    dataComponent.start(objectRefs);
                  })
                 .then(function () {
                     return config.runtime.requests([
@@ -49,7 +48,10 @@ define([
                     ]);
                 })
                 .spread(function (workspaceUrl, authToken) {
-                    console.log('object ref ', input);
+                    // In this widget model, the data component is always fed
+                    // a strict diet of data. It never gets data from the 
+                    // environment. That is the job of this front end widget
+                    // controller.
                     return dataComponent.fetch({
                         config: {
                             services: {
@@ -61,7 +63,7 @@ define([
                         authorization: {
                             token: authToken.value
                         },
-                        objectRef: input.objectRef
+                        objectRef: objectRefs.objectRef
                     });
                 })
                 .then(function (data) {
@@ -74,7 +76,7 @@ define([
             utils.showLoading(container, 'Loading data...');
 
             // Launch the main widget code.
-            start(initialState)
+            start(initialState.objectRefs, initialState.options)
                 .catch(function (err) {
                     var message;
                     if (err.message) {

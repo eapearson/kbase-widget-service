@@ -10,18 +10,18 @@ define([
         var container = config.node, 
             widget = Widget.make(config);
         
-        function start(data) {
+        function start(objectRefs) {
             //console.log('HEREEEEE');
             //console.log('INPUTX', config, data);
             //var input = config.input || data.input;
             //widget.start(container, input);
-            var input = config.input || data.input;
-            return widget.start(container, input);
+            // var input = config.objectRefs || objectRefs;
+            return widget.start(container, objectRefs);
         }
         
-        config.runtime.on('start', function (initialState) {
+        config.runtime.on('start', function (data) {
             utils.showLoading(container, 'Loading data...');
-            start(initialState)
+            start(data.objectRefs)
                 .catch(function (err) {
                     var message;
                     if (err.message) {

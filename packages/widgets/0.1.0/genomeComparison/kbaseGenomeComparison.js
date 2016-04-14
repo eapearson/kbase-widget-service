@@ -43,21 +43,20 @@ define([
             genome2wsName: null,
             genome2objName: null,
             tooltip: null,
-            validateParams: function (params) {
+            validateInput: function (objectRefs) {
                 return Promise.try(function () {
-                    if (!params) {
-                        throw new Error('No params supplied');
+                    if (!objectRefs) {
+                        throw new Error('No input supplied');
                     }
-                    if (!params.objectRef) {
-                        throw new Error('The objectRef param is missing');
+                    if (!objectRefs.objectRef) {
+                        throw new Error('The objectRef input object is missing');
                     }
-
-                    return params;
+                    return objectRefs;
                 });
             },
-            start: function (node, input) {
+            start: function (node, objectRefs) {
                 var self = this;
-                return this.validateParams(input)
+                return this.validateInput(objectRefs)
                     .then(function () {
                         return config.runtime.requests([
                             ['config', {property: 'services.workspace.url'}],
@@ -68,10 +67,10 @@ define([
                     .spread(function (workspaceUrl, genomeComparisonUrl, authToken) {
                         self.cmpImgUrl = genomeComparisonUrl.value.replace('jsonrpc', 'image');
                         self.authToken = authToken.value,
-                        self.pref = self.uuid();
+                            self.pref = self.uuid();
                         self.container = node;
                         self.$container = $(self.container);
-                        self.render(self.$container, input, workspaceUrl.value, authToken.value);
+                        self.render(self.$container, objectRefs, workspaceUrl.value, authToken.value);
                     });
             },
 //            init: function (data) {
@@ -318,7 +317,7 @@ define([
                     return 'Unknown error';
                 }
             },
-            render: function ($container, params, workspaceUrl, authToken) {
+            render: function ($container, objectRefs, workspaceUrl, authToken) {
                 var self = this;
 
                 // TODO: replace this abomination
@@ -337,7 +336,7 @@ define([
                 });
 
                 function dataIsReady() {
-                    kbws.get_objects([{ref: params.objectRef}])
+                    kbws.get_objects([{ref: objectRefs.objectRef}])
                         .then(function (data) {
                             self.cmp = data[0].data;
                             var info = data[0].info;
@@ -347,10 +346,11 @@ define([
                         })
                         .catch(function (err) {
                             var tdElem = $('#' + self.pref + 'job');
-                        console.error('error', err);
-                            tdElem.html("Error accessing comparison object: " +  self.errorMessage(err));
+                            console.error('error', err);
+                            tdElem.html("Error accessing comparison object: " + self.errorMessage(err));
                         });
-                };
+                }
+                ;
 
                 dataIsReady();
                 return this;
@@ -407,7 +407,7 @@ define([
                  */
                 var img = self.cmpImgUrl + "?ws=" + self.objectInfo.wsid + "&id=" + self.objectInfo.id + "&x=" + self.imgI +
                     "&y=" + self.imgJ + "&w=" + self.size + "&sp=" + self.scale + "&token=" + encodeURIComponent(self.authToken);
-                
+
                 $('#' + self.pref + 'img').attr('src', img);
                 self.refreshDetailedRect();
             },
