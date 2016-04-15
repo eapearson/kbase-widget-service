@@ -2,9 +2,9 @@
 /*jslint white:true,browser:true*/
 define([
     'bluebird',
-    'contigset/data',
-    'contigset/view',
-    'contigset/error',
+    'contigSet/data',
+    'contigSet/view',
+    'contigSet/error',
     'utils',
     'datatables_bootstrap',
     'css!genomeComparison/styles'
