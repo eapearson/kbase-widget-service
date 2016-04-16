@@ -2,11 +2,10 @@
 /*jglint white:true,browser:true */
 define([
     'bluebird',
-    'uuid',
-    'kb_common/html',
-    'kb_widget/widgetService',
-    'kb_widget/messageBus'
-], function (Promise, Uuid, html, WidgetService, MessageBus) {
+    'kb/common/html',
+    './widgetService',
+    './messageBus'
+], function (Promise, html, WidgetService, MessageBus) {
     'use strict';
     function factory(config) {
         var t = html.tag,
@@ -30,21 +29,17 @@ define([
 
         function addWidget(args) {
             var localName = args.name || html.genId(),
-                widgetDef;
-            if (args.package) {
-                widgetDef = widgetService.getWidget(args.package, args.version, args.widget);
-            } else {
-                widgetDef = widgetService.findWidget(args.widget);
-            }
+                widgetName = args.widget;
+            var widgetDef = widgetService.findWidget(widgetName);
             if (!widgetDef) {
-                throw new Error('Cannot find widget with name ' + args.widgetName);
+                throw new Error('Cannot find widget with name ' + widgetName);
             }
             if (widgetInstances[localName]) {
                 throw new Error('A widget is already installed with this name ' + localName);
             }
             var domId = html.genId();
             widgetInstances[localName] = {
-                widgetName: args.widget,
+                widgetName: widgetName,
                 localName: localName,
                 domId: domId,
                 widgetDef: widgetDef
@@ -57,7 +52,7 @@ define([
             }
             return div({id: domId});
         }
-        function nodeForWidget(localName) {
+        function widgetNode(localName) {
             var widgetInstance = getWidget(localName);
             if (!widgetInstance) {
                 throw new Error('Cannot find widget installed with name ' + localName);
@@ -79,12 +74,12 @@ define([
             });
         }
 
-        function loadWidgets(adapter) {
+        function loadWidgets(runtime, params) {
             return Promise.all(getWidgetInstances().map(function (widgetInstance) {
                 var widgetDef = widgetInstance.widgetDef,
-                    widgetNode = nodeForWidget(widgetInstance.localName),
+                    widgetDiv = widgetNode(widgetInstance.localName),
                     widgetLoader = getModuleLoader(widgetDef),
-                    runtimeComumnicator = makeWidgetComm(adapter);
+                    runtimeComumnicator = makeWidgetComm(runtime, widgetDiv, params);
 
                 // Each widget is a promise. Note that this just creates the widgets,
                 // it does not wait for the widget to render, fetch, etc.
@@ -93,10 +88,7 @@ define([
                     widgetLoader([widgetDef.widget.amdName], function (Widget) {
                         // TODO: store the widget in the widgetInstances...
                         try {
-                            var widget = Widget.make({
-                                node: widgetNode,
-                                runtime: runtimeComumnicator
-                            });
+                            var widget = Widget.make(config, runtimeComumnicator);
                             resolve();
                         } catch (ex) {
                             reject(ex);
@@ -106,17 +98,38 @@ define([
             }));
 
         }
-        
-        // Create an runtime communication object. For a widget to communicate with 
+// Create an runtime communication object. For a widget to communicate with 
         // the environment which invoked it.
-        function makeWidgetComm(adapter)  {
+        function makeWidgetComm(runtime, node, params) {
             var bus = MessageBus.make();
 
-            try {
-                adapter(bus);
-            } catch (ex) {
-                console.error('Error running adapter ', ex);
+            bus.subscribe('ready', function (data) {
+                bus.publish('start', {
+                    node: node,
+                    params: params
+                });
+            });
+
+            bus.subscribe('config', function (data) {
+                return {
+                    value: runtime.config(data.property, data.defaultValue)
+                };
+            });
+
+            bus.subscribe('authToken', function (data) {
+                return {
+                    value: runtime.service('session').getAuthToken()
+                };
+            });
+
+            var lastId = 0;
+            function genId() {
+                var nextId = lastId + 1,
+                    id = 'message_' + String(nextId);
+                lastId = nextId;
+                return id;
             }
+
 
             // API
 
@@ -126,7 +139,7 @@ define([
 
             function request(messageName, data) {
                 return new Promise(function (resolve, reject) {
-                    var id = (new Uuid(4)).format();
+                    var id = genId();
                     bus.subscribe(id, function (data) {
                         resolve(data);
                     }, true);
@@ -169,7 +182,7 @@ define([
         return {
             getWidget: getWidget,
             addWidget: addWidget,
-            nodeForWidget: nodeForWidget,
+            widgetNode: widgetNode,
             getModuleLoader: getModuleLoader,
             getWidgetInstances: getWidgetInstances,
             makeWidgetComm: makeWidgetComm,

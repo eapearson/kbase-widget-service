@@ -2,7 +2,7 @@
 /*jslint white:true,browser:true */
 
 define([
-    'kb_widget/runtimeManager'
+    './runtimeManager'
 ], function (RuntimeManager) {
     'use strict';
 
@@ -13,8 +13,6 @@ define([
                 cdnUrl: cdnUrl
             });
 
-        // NB: For prototyping we supply this widget db in code.
-        // This is modeling a service which provides widget lookup.
         var widgetPackages = [
             {
                 name: 'widgets',
@@ -44,12 +42,9 @@ define([
                                 fileName: 'pairedEndLibrary.js',
                                 amdName: 'pairedEndLibrary',
                                 input: {
-                                    objects: {
-                                        objectRef: {
-                                            required: true
-                                        }
-                                    },
-                                    options: {}
+                                    objectRef: {
+                                        required: true
+                                    }
                                 }
                             },
                             {
@@ -57,12 +52,9 @@ define([
                                 fileName: 'contigSet.js',
                                 amdName: 'contigSet',
                                 input: {
-                                    objects: {
-                                        objectRef: {
-                                            required: true
-                                        }
-                                    },
-                                    options: {}
+                                    objectRef: {
+                                        required: true
+                                    }
                                 }
                             },
                             {
@@ -70,10 +62,8 @@ define([
                                 fileName: 'genomeCompairson.js',
                                 amdName: 'genomeComparison',
                                 input: {
-                                    objects: {
-                                        objectRef: {
-                                            required: true
-                                        }
+                                    objectRef: {
+                                        required: true
                                     }
                                 }
                             }
@@ -114,9 +104,9 @@ define([
          * Get a specific widget
          */
         function getWidget(packageName, version, widgetName) {
-            var versionedPackage = findPackage(packageName, version),
-                widget = versionedPackage.widgets[widgetName];
-            
+            var versionedPackage = findPackage(packageName, version);
+
+            var widget = versionedPackage.widgetDb[widgetName];
             if (!widget) {
                 throw new Error('Cannot locate widget ' + widgetName + ' in package ' + packageName + ' version ' + version);
             }

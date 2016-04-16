@@ -1,11 +1,5 @@
 /*global define*/
 /*jslint white:true,browser:true*/
-/*
- * Message Bus
- * A simple pub/sub message bus. Designed to be light and instantiated for domain
- * specific usage. In other words, not designed to be an app wide message bus 
- * with namespacing via channels, etc.
- */
 define([
 ], function () {
     function factory(config) {
