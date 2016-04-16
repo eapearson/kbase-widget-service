@@ -84,7 +84,7 @@ define([
                             
                         // kbase
                         // kbase
-                        'kb_service': 'kbase-serivce-clients/1.2.4',
+                        'kb_service': 'kbase-service-clients-js/1.2.4',
                         'kb_common': 'kbase-common-js/1.5.3',
                         'kb_widget_service': 'kbase-widget-service/0.1.0'
                     },
