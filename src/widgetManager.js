@@ -4,8 +4,8 @@ define([
     'bluebird',
     'uuid',
     'kb_common/html',
-    'kb_widget/widgetService',
-    'kb_widget/messageBus'
+    './widgetService',
+    './messageBus'
 ], function (Promise, Uuid, html, WidgetService, MessageBus) {
     'use strict';
     function factory(config) {

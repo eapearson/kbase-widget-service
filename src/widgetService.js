@@ -2,7 +2,7 @@
 /*jslint white:true,browser:true */
 
 define([
-    'kb_widget/runtimeManager'
+    './runtimeManager'
 ], function (RuntimeManager) {
     'use strict';
 
